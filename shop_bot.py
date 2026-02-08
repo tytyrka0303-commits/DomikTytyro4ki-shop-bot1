@@ -26,11 +26,13 @@ def get_shop():
     }
     resp = requests.get(url, headers=headers).json()
 
-    if "data" not in resp:
+    print("API RESPONSE KEYS:", resp["data"].keys())
+
+    if "entries" not in resp["data"]:
         print("API ERROR:", resp)
         return []
 
-    return resp["data"]["featured"]["entries"]
+    return resp["data"]["entries"]
 def generate_image(items):
     cols = 5
     size = 200
