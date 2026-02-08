@@ -1,4 +1,4 @@
-.import os
+import os
 import os
 print("DEBUG TOKEN =", os.getenv("TOKEN"))
 import telebot
