@@ -16,7 +16,9 @@ jobs:
 
       - name: Install deps
         run: pip install pyTelegramBotAPI pillow
-     - name: Run bot
-  env:
-    TOKEN: ${{ secrets.TOKEN }}
-  run: python shop_bot.py
+
+      - name: Run bot
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+        run: python shop_bot.py
+        
