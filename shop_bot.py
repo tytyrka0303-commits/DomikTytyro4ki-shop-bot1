@@ -1,6 +1,6 @@
 import os
 import os
-print("DEBUG TOKEN =", os.getenv("BOT_TOKEN"))
+print("DEBUG TOKEN =", os.getenv("TOKEN"))
 import telebot
 import requests
 import os
@@ -8,7 +8,7 @@ import telebot
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("TOKEN")
 CHANNEL = "@DomikTytyro4ki"
 
 bot = telebot.TeleBot(TOKEN)
