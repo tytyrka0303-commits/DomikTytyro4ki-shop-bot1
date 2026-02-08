@@ -1,4 +1,6 @@
-name: Fortnite Shop Bot
+- name: Check secret
+  run: echo "SECRET IS: $BOT_TOKEN"
+  name: Fortnite Shop Bot
 
 on:
   schedule:
