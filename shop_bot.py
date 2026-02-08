@@ -1,4 +1,4 @@
-import os
+.import os
 import os
 print("DEBUG TOKEN =", os.getenv("TOKEN"))
 import telebot
@@ -23,7 +23,9 @@ RARITY_COLORS = {
 
 def get_shop():
     url = "https://fortnite-api.com/v2/shop/br"
-    return requests.get(url).json()["data"]["featured"]["entries"]
+   resp = requests.get(url).json()
+print(resp)
+return []
 
 def generate_image(items):
     cols = 5
