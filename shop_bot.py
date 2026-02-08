@@ -1,5 +1,5 @@
 import os
-import telebotimport
+import telebot
 import requests
 import os
 import telebot
