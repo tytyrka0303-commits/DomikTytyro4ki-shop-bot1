@@ -4,10 +4,9 @@ import telebot
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 
-print("DEBUG TOKEN =", os.getenv("TOKEN"))
-
+# ===== НАСТРОЙКИ =====
 TOKEN = os.getenv("TOKEN")
-CHANNEL = "@DomikTytyro4k1"   # твой канал
+CHANNEL = "@DomikTytyro4k1"   # свой канал
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -19,15 +18,26 @@ RARITY_COLORS = {
     "legendary": "#ff8000"
 }
 
-
+# ===== ПОЛУЧЕНИЕ МАГАЗИНА =====
 def get_shop():
     url = "https://fortnite-api.com/v2/shop/br"
-    resp = requests.get(url).json()
+    try:
+        resp = requests.get(url, timeout=10).json()
+    except:
+        print("API REQUEST FAILED")
+        return []
 
-    entries = resp["data"]["featured"]["entries"]
-    return entries
+    if "data" not in resp:
+        print("API ERROR:", resp)
+        return []
 
+    if "featured" not in resp["data"]:
+        print("NO FEATURED BLOCK")
+        return []
 
+    return resp["data"]["featured"]["entries"]
+
+# ===== ГЕНЕРАЦИЯ КАРТИНКИ =====
 def generate_image(items):
     cols = 5
     size = 200
@@ -35,35 +45,47 @@ def generate_image(items):
 
     rows = (len(items) // cols) + 1
     width = cols * size + padding * 2
-    height = rows * size + 140
+    height = rows * size + 150
 
     img = Image.new("RGB", (width, height), "#2b1055")
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype("arial.ttf", 18)
-        big = ImageFont.truetype("arial.ttf", 36)
+        font = ImageFont.truetype("arial.ttf", 16)
+        big = ImageFont.truetype("arial.ttf", 32)
     except:
         font = ImageFont.load_default()
         big = font
 
     today = datetime.now().strftime("%d.%m.%Y")
     draw.text((20, 20), f"Магазин Fortnite - {today}", fill="white", font=big)
-    draw.text((20, 70), "Домик Tytyro4k1", fill="#ff4dff", font=font)
+    draw.text((20, 70), "DomikTytyro4k1", fill="#ff4dff", font=font)
 
     x = padding
-    y = 100
+    y = 120
 
     for i, entry in enumerate(items):
-        item = entry["items"][0]
-        name = item["name"]
-        price = entry["finalPrice"]
-        rarity = item["rarity"]["value"]
-        color = RARITY_COLORS.get(rarity, "white")
 
-        icon_url = item["images"]["icon"]
-        icon = Image.open(requests.get(icon_url, stream=True).raw)
-        icon = icon.resize((size - 20, size - 60))
+        if not entry.get("brItems"):
+            continue
+
+        item = entry["brItems"][0]
+        name = item.get("name", "Unknown")
+        price = entry.get("finalPrice", 0)
+        rarity = item.get("rarity", {}).get("value", "common")
+        color = RARITY_COLORS.get(rarity, "white")
+        icon_url = item.get("images", {}).get("icon")
+
+        if not icon_url:
+            continue
+
+        try:
+            icon = Image.open(
+                requests.get(icon_url, stream=True, timeout=10).raw
+            )
+            icon = icon.resize((size - 20, size - 60))
+        except:
+            continue
 
         card = Image.new("RGB", (size, size), color)
         card.paste(icon, (10, 10))
@@ -83,17 +105,28 @@ def generate_image(items):
     img.save(file)
     return file
 
-
+# ===== ОСНОВНОЙ ЗАПУСК =====
 def main():
-    items = get_shop()
-    image = generate_image(items)
+    print("BOT STARTED")
 
+    if not TOKEN:
+        print("TOKEN NOT FOUND")
+        return
+
+    items = get_shop()
+    if not items:
+        print("SHOP EMPTY")
+        return
+
+    image = generate_image(items)
     today = datetime.now().strftime("%d.%m.%Y")
+
     bot.send_photo(
         CHANNEL,
         open(image, "rb"),
         caption=f"🛒 Магазин Fortnite\n📅 {today}\n@DomikTytyro4k1"
     )
 
+    print("SENT SUCCESSFULLY")
 
 main()
