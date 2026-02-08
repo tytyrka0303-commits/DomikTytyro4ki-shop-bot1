@@ -21,7 +21,15 @@ RARITY_COLORS = {
 
 def get_shop():
     url = "https://fortnite-api.com/v2/shop/br"
-    resp = requests.get(url).json()
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+    resp = requests.get(url, headers=headers).json()
+
+    if "data" not in resp:
+        print("API ERROR:", resp)
+        return []
+
     return resp["data"]["featured"]["entries"]
 
 def generate_image(items):
