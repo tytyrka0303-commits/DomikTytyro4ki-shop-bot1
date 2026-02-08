@@ -1,4 +1,6 @@
-import requests
+import os
+print("TOKEN:", os.getenv("BOT_TOKEN"))
+import telebotimport requests
 import os
 import telebot
 from PIL import Image, ImageDraw, ImageFont
