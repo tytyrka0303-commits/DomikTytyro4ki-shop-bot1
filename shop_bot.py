@@ -60,7 +60,7 @@ def generate_image(items):
     y = 100
 
     for i, entry in enumerate(items):
-        item = entry["items"][0]
+        item = entry["britems"][0]
         name = item["name"]
         price = entry["finalPrice"]
         rarity = item["rarity"]["value"]
