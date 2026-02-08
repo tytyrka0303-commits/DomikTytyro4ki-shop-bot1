@@ -1,13 +1,30 @@
-import telebot
 import os
+import requests
 
 TOKEN = os.getenv("TOKEN")
-bot = telebot.TeleBot(TOKEN)
+CHAT_ID = -1003333614856# твой тгк
 
-CHAT_ID = -1003333614856# твой реальный id
+url = "https://fortnite-api.com/v2/shop/br"
+resp = requests.get(url).json()
 
-try:
-    bot.send_message(CHAT_ID, "ПРОВЕРКА: бот жив")
-    print("OK: message sent")
-except Exception as e:
-    print("SEND ERROR:", e)
+if not resp.get("data"):
+    print("SHOP EMPTY")
+    exit()
+
+items = resp["data"]["featured"]["entries"]
+
+text = "🛒 Магазин Fortnite сегодня:\n\n"
+
+for entry in items[:5]:
+    name = entry["items"][0]["name"]
+    text += f"• {name}\n"
+
+requests.get(
+    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+    params={
+        "chat_id": CHAT_ID,
+        "text": text
+    }
+)
+
+print("SENT TO TELEGRAM")
