@@ -1,13 +1,13 @@
 import os
 import requests
+import telebot
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
-import telebot
 
 print("DEBUG TOKEN =", os.getenv("TOKEN"))
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL = "@DomikTytro4ki"
+CHANNEL = "@DomikTytyro4k1"   # твой канал
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -19,20 +19,15 @@ RARITY_COLORS = {
     "legendary": "#ff8000"
 }
 
+
 def get_shop():
-    url = "https://fortnite-api.com/v2/shop"
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-    resp = requests.get(url, headers=headers).json()
+    url = "https://fortnite-api.com/v2/shop/br"
+    resp = requests.get(url).json()
 
-    print("API RESPONSE KEYS:", resp["data"].keys())
+    entries = resp["data"]["featured"]["entries"]
+    return entries
 
-    if "entries" not in resp["data"]:
-        print("API ERROR:", resp)
-        return []
 
-    return resp["data"]["entries"]
 def generate_image(items):
     cols = 5
     size = 200
@@ -53,30 +48,29 @@ def generate_image(items):
         big = font
 
     today = datetime.now().strftime("%d.%m.%Y")
-    draw.text((20, 20), f"Магазин Fortnite — {today}", fill="white", font=big)
-    draw.text((20, 70), "Домик Tytro4ki", fill="#ff4dff", font=font)
+    draw.text((20, 20), f"Магазин Fortnite - {today}", fill="white", font=big)
+    draw.text((20, 70), "Домик Tytyro4k1", fill="#ff4dff", font=font)
 
     x = padding
     y = 100
 
-   for i, entry in enumerate(items):
+    for i, entry in enumerate(items):
+        item = entry["items"][0]
+        name = item["name"]
+        price = entry["finalPrice"]
+        rarity = item["rarity"]["value"]
+        color = RARITY_COLORS.get(rarity, "white")
 
-    if not entry.get("brItems"):
-        continue
+        icon_url = item["images"]["icon"]
+        icon = Image.open(requests.get(icon_url, stream=True).raw)
+        icon = icon.resize((size - 20, size - 60))
 
-    item = entry["brItems"][0]
-    name = item["name"]
-    price = entry["finalPrice"]
-    rarity = item["rarity"]["value"]
-    color = RARITY_COLORS.get(rarity, "white")
-
-    icon_url = item["images"]["icon"]
         card = Image.new("RGB", (size, size), color)
         card.paste(icon, (10, 10))
 
         d = ImageDraw.Draw(card)
-        d.text((10, size-45), name[:16], fill="white", font=font)
-        d.text((10, size-25), f"{price} V-Bucks", fill="yellow", font=font)
+        d.text((10, size - 45), name[:16], fill="white", font=font)
+        d.text((10, size - 25), f"{price} V-Bucks", fill="yellow", font=font)
 
         img.paste(card, (x, y))
 
@@ -89,15 +83,17 @@ def generate_image(items):
     img.save(file)
     return file
 
+
 def main():
     items = get_shop()
     image = generate_image(items)
-    today = datetime.now().strftime("%d.%m.%Y")
 
+    today = datetime.now().strftime("%d.%m.%Y")
     bot.send_photo(
         CHANNEL,
         open(image, "rb"),
-        caption=f"🛒 Магазин Fortnite\n📅 {today}\nДомик Tytro4ki"
+        caption=f"🛒 Магазин Fortnite\n📅 {today}\n@DomikTytyro4k1"
     )
+
 
 main()
