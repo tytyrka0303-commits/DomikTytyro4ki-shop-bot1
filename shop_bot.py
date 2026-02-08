@@ -2,7 +2,7 @@ import os
 import requests
 
 TOKEN = os.getenv("TOKEN")
-CHAT_ID = -8563120123# твой тгк
+CHAT_ID = 8563120123# твой тгк
 
 url = "https://fortnite-api.com/v2/shop/br"
 resp = requests.get(url).json()
