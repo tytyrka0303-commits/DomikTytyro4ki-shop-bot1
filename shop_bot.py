@@ -1,15 +1,13 @@
 import os
-import os
-print("DEBUG TOKEN =", os.getenv("TOKEN"))
-import telebot
 import requests
-import os
-import telebot
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+import telebot
+
+print("DEBUG TOKEN =", os.getenv("TOKEN"))
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL = "@DomikTytyro4ki"
+CHANNEL = "@DomikTytro4ki"
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -23,9 +21,8 @@ RARITY_COLORS = {
 
 def get_shop():
     url = "https://fortnite-api.com/v2/shop/br"
-   resp = requests.get(url).json()
-print(resp)
-return []
+    resp = requests.get(url).json()
+    return resp["data"]["featured"]["entries"]
 
 def generate_image(items):
     cols = 5
@@ -47,9 +44,8 @@ def generate_image(items):
         big = font
 
     today = datetime.now().strftime("%d.%m.%Y")
-
     draw.text((20, 20), f"Магазин Fortnite — {today}", fill="white", font=big)
-    draw.text((20, 70), "Домик Tytyro4ki", fill="#ff4dff", font=font)
+    draw.text((20, 70), "Домик Tytro4ki", fill="#ff4dff", font=font)
 
     x = padding
     y = 100
@@ -87,10 +83,11 @@ def main():
     items = get_shop()
     image = generate_image(items)
     today = datetime.now().strftime("%d.%m.%Y")
+
     bot.send_photo(
         CHANNEL,
         open(image, "rb"),
-        caption=f"🛒 Магазин Fortnite\n📅 {today}\nДомик Tytyro4ki"
+        caption=f"🛒 Магазин Fortnite\n📅 {today}\nДомик Tytro4ki"
     )
 
 main()
