@@ -6,7 +6,7 @@ from datetime import datetime
 
 # ===== НАСТРОЙКИ =====
 TOKEN = os.getenv("TOKEN")
-CHANNEL = "@DomikTytyro4k1"   # свой канал
+CHANNEL = "@DomikTytyro4ki"   # свой канал
 
 bot = telebot.TeleBot(TOKEN)
 
