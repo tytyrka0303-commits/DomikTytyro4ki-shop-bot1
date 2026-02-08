@@ -59,17 +59,18 @@ def generate_image(items):
     x = padding
     y = 100
 
-    for i, entry in enumerate(items):
-        item = entry["britems"][0]
-        name = item["name"]
-        price = entry["finalPrice"]
-        rarity = item["rarity"]["value"]
-        color = RARITY_COLORS.get(rarity, "white")
+   for i, entry in enumerate(items):
 
-        icon_url = item["images"]["icon"]
-        icon = Image.open(requests.get(icon_url, stream=True).raw)
-        icon = icon.resize((size-20, size-60))
+    if not entry.get("brItems"):
+        continue
 
+    item = entry["brItems"][0]
+    name = item["name"]
+    price = entry["finalPrice"]
+    rarity = item["rarity"]["value"]
+    color = RARITY_COLORS.get(rarity, "white")
+
+    icon_url = item["images"]["icon"]
         card = Image.new("RGB", (size, size), color)
         card.paste(icon, (10, 10))
 
