@@ -2,100 +2,89 @@ import os
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import math
 
 TOKEN = os.getenv("TOKEN")
-CHAT_ID = -1003333614856
+CHAT_ID = -1003333614856  # твой канал
 
-url = "https://fortnite-api.com/v2/shop/br"
-resp = requests.get(url).json()
+SHOP_URL = "https://fortnite-api.com/v2/shop/br"
 
-if not resp.get("data"):
-    print("API ERROR:", resp)
-    exit()
+resp = requests.get(SHOP_URL).json()
+data = resp["data"]["entries"]
 
-items = resp["data"]["featured"]["entries"]
+items = []
+for entry in data:
+    item = entry["items"][0]
+    price = entry["finalPrice"]
+    rarity = item["rarity"]["displayValue"]
+    image = item["images"]["icon"]
+    name = item["name"]
+    items.append({
+        "name": name,
+        "price": price,
+        "rarity": rarity,
+        "image": image
+    })
 
-half = math.ceil(len(items) / 2)
-parts = [items[:half], items[half:]]
+def rarity_color(r):
+    return {
+        "Common": (180,180,180),
+        "Uncommon": (0,255,100),
+        "Rare": (80,140,255),
+        "Epic": (180,80,255),
+        "Legendary": (255,160,60)
+    }.get(r, (255,255,255))
 
-COLS = 4
-SIZE = 300
+def make_collage(chunk, filename):
+    cols = 4
+    rows = 4
+    size = 256
+    padding = 20
+    title_height = 120
 
-try:
-    font = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)
-except:
-    font = ImageFont.load_default()
+    width = cols*size + (cols+1)*padding
+    height = rows*size + (rows+1)*padding + title_height
 
-def make_collage(entries, filename):
-    rows = math.ceil(len(entries) / COLS)
-    canvas = Image.new("RGB", (COLS * SIZE, rows * SIZE), "black")
-    draw = ImageDraw.Draw(canvas)
+    bg = Image.new("RGB", (width, height), (30, 60, 120))
+    draw = ImageDraw.Draw(bg)
 
-    x = 0
-    y = 0
+    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
+    text = 'Магазин предметов от "Домик Tytyro4ki"'
+    draw.text((width//2 - 380, 30), text, fill=(255,220,80), font=title_font)
 
-    for entry in entries:
-        item = entry["items"][0]
-        icon_url = item["images"]["icon"]
-        price = entry["finalPrice"]
-        rarity = item["rarity"]["displayValue"]
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
 
-        img_data = requests.get(icon_url).content
-        icon = Image.open(BytesIO(img_data)).resize((SIZE, SIZE))
-        canvas.paste(icon, (x * SIZE, y * SIZE))
+    for i, item in enumerate(chunk):
+        row = i // cols
+        col = i % cols
 
-        # редкость сверху
-        draw.rectangle(
-            (x*SIZE, y*SIZE, x*SIZE+SIZE, y*SIZE+30),
-            fill="black"
+        x = padding + col*(size+padding)
+        y = title_height + padding + row*(size+padding)
+
+        img = Image.open(BytesIO(requests.get(item["image"]).content)).resize((size, size))
+        bg.paste(img, (x,y))
+
+        color = rarity_color(item["rarity"])
+        draw.rectangle([x,y,x+size,y+28], fill=color)
+
+        draw.text((x+8, y+4), item["rarity"], fill=(0,0,0), font=font)
+        draw.text((x+8, y+size-60), item["name"], fill=(255,255,255), font=font)
+        draw.text((x+8, y+size-30), f'{item["price"]} V-Bucks', fill=(255,220,80), font=font)
+
+    bg.save(filename)
+
+half = len(items)//2
+make_collage(items[:half], "shop1.png")
+make_collage(items[half:], "shop2.png")
+
+def send_photo(path):
+    with open(path, "rb") as f:
+        requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
+            data={"chat_id": CHAT_ID},
+            files={"photo": f}
         )
-        draw.text(
-            (x*SIZE+10, y*SIZE+5),
-            rarity,
-            fill="white",
-            font=font
-        )
 
-        # цена снизу
-        draw.rectangle(
-            (x*SIZE, y*SIZE+SIZE-35, x*SIZE+SIZE, y*SIZE+SIZE),
-            fill="black"
-        )
-        draw.text(
-            (x*SIZE+10, y*SIZE+SIZE-30),
-            f"{price} V-Bucks",
-            fill="white",
-            font=font
-        )
+send_photo("shop1.png")
+send_photo("shop2.png")
 
-        x += 1
-        if x >= COLS:
-            x = 0
-            y += 1
-
-    canvas.save(filename)
-
-make_collage(parts[0], "shop_1.png")
-make_collage(parts[1], "shop_2.png")
-
-for file in ["shop_1.png", "shop_2.png"]:
-    requests.post(
-        f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
-        data={"chat_id": CHAT_ID},
-        files={"photo": open(file, "rb")}
-    )
-
-print("SHOP SENT WITH PRICES & RARITY")
-import requests, os
-
-TOKEN = os.getenv("TOKEN")
-CHAT_ID = -100...
-
-requests.get(
-    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-    params={
-        "chat_id": CHAT_ID,
-        "text": "ТЕСТ. ЕСЛИ ВИДИШЬ — БОТ ЖИВ"
-    }
-)
+print("ГОТОВО. 2 коллажа отправлены.")
