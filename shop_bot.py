@@ -1,3 +1,5 @@
+import os
+import requests
 requests.get(
     f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
     params={
