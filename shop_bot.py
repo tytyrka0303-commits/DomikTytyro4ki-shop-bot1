@@ -1,86 +1,53 @@
 import os
 import requests
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime
+from PIL import Image
+from io import BytesIO
 import math
 
 TOKEN = os.getenv("TOKEN")
-CHAT_ID = -1003333614856  # твой канал
+CHAT_ID = -1003333614856
 
-# ===== получаем магазин =====
 url = "https://fortnite-api.com/v2/shop/br"
-resp = requests.get(url).json()
+data = requests.get(url).json()["data"]["featured"]["entries"]
 
-if not resp.get("data"):
-    print("SHOP EMPTY")
-    exit()
+# делим магазин на 2 части
+half = math.ceil(len(data) / 2)
+parts = [data[:half], data[half:]]
 
-items = resp["data"]["featured"]["entries"]
+COLS = 4
+SIZE = 256
 
-# ===== настройки коллажа =====
-COLS = 5
-CARD_SIZE = 200
-PADDING = 20
+def make_collage(items, filename):
+    rows = math.ceil(len(items) / COLS)
+    canvas = Image.new("RGB", (COLS * SIZE, rows * SIZE), "black")
 
-ROWS = math.ceil(len(items) / COLS)
-WIDTH = COLS * CARD_SIZE + PADDING * 2
-HEIGHT = ROWS * CARD_SIZE + 140
+    x = 0
+    y = 0
 
-img = Image.new("RGB", (WIDTH, HEIGHT), "#2b1055")
-draw = ImageDraw.Draw(img)
+    for entry in items:
+        icon_url = entry["items"][0]["images"]["icon"]
+        img_data = requests.get(icon_url).content
+        icon = Image.open(BytesIO(img_data)).resize((SIZE, SIZE))
 
-try:
-    font = ImageFont.truetype("arial.ttf", 16)
-    big = ImageFont.truetype("arial.ttf", 32)
-except:
-    font = ImageFont.load_default()
-    big = font
+        canvas.paste(icon, (x * SIZE, y * SIZE))
 
-today = datetime.now().strftime("%d.%m.%Y")
-draw.text((20, 20), f"Магазин Fortnite — {today}", fill="white", font=big)
+        x += 1
+        if x >= COLS:
+            x = 0
+            y += 1
 
-x = PADDING
-y = 100
+    canvas.save(filename)
 
-# ===== рисуем карточки =====
-for i, entry in enumerate(items):
-    item = entry["items"][0]
+# создаём 2 картинки
+make_collage(parts[0], "shop_1.png")
+make_collage(parts[1], "shop_2.png")
 
-    name = item["name"]
-    price = entry.get("finalPrice", 0)
-    icon_url = item["images"]["icon"]
+# отправляем в Telegram
+for file in ["shop_1.png", "shop_2.png"]:
+    requests.post(
+        f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
+        data={"chat_id": CHAT_ID},
+        files={"photo": open(file, "rb")}
+    )
 
-    icon = Image.open(requests.get(icon_url, stream=True).raw)
-    icon = icon.resize((CARD_SIZE - 20, CARD_SIZE - 60))
-
-    card = Image.new("RGB", (CARD_SIZE, CARD_SIZE), "#1c1c1c")
-    card.paste(icon, (10, 10))
-
-    d = ImageDraw.Draw(card)
-    d.text((10, CARD_SIZE - 45), name[:18], fill="white", font=font)
-    d.text((10, CARD_SIZE - 25), f"{price} V-Bucks", fill="yellow", font=font)
-
-    img.paste(card, (x, y))
-
-    x += CARD_SIZE
-    if (i + 1) % COLS == 0:
-        x = PADDING
-        y += CARD_SIZE
-
-# ===== сохраняем =====
-file = "shop.png"
-img.save(file)
-
-# ===== отправляем в Telegram =====
-requests.get(
-    f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
-    params={
-        "chat_id": CHAT_ID,
-        "photo": "https://raw.githubusercontent.com/"  # заглушка
-    },
-    files={
-        "photo": open(file, "rb")
-    }
-)
-
-print("COLLAGE SENT")
+print("BOTH COLLAGES SENT")
