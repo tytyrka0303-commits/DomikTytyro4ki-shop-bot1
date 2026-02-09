@@ -87,3 +87,15 @@ for file in ["shop_1.png", "shop_2.png"]:
     )
 
 print("SHOP SENT WITH PRICES & RARITY")
+import requests, os
+
+TOKEN = os.getenv("TOKEN")
+CHAT_ID = -100...
+
+requests.get(
+    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+    params={
+        "chat_id": CHAT_ID,
+        "text": "ТЕСТ. ЕСЛИ ВИДИШЬ — БОТ ЖИВ"
+    }
+)
