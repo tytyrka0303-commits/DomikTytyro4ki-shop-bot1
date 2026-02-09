@@ -9,6 +9,12 @@ CHAT_ID = -1003333614856  # твой канал
 SHOP_URL = "https://fortnite-api.com/v2/shop/br"
 
 resp = requests.get(SHOP_URL).json()
+
+if not resp.get("data"):
+    print("FORTNITE API ERROR:")
+    print(resp)
+    exit()
+
 data = resp["data"]["entries"]
 
 items = []
