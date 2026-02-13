@@ -8,8 +8,9 @@ url = f"https://api.telegram.org/bot{TOKEN}/sendPhoto"
 data = {
     "chat_id": CHAT_ID,
     "photo": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Fortnite_F_letter_logo.png",
-    "caption": "Фото пришло — значит всё работает"
+    "caption": "ТЕСТ ФОТО"
 }
 
 r = requests.post(url, data=data)
-print(r.text)
+print("STATUS:", r.status_code)
+print("RESPONSE:", r.text)
